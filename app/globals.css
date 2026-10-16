@@ -1,0 +1,163 @@
+:root {
+  color-scheme: light;
+  --ink: #1c1915;
+  --muted: #5c564c;
+  --paper: #f3efe6;
+  --card: #fffdf8;
+  --line: #ddd4c4;
+  --accent: #1f4d45;
+  --banner: #1c1915;
+  --banner-ink: #f6f1e7;
+  --danger: #7a2e2a;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  color: var(--ink);
+  background: var(--paper);
+  font-family: "Avenir Next", "Segoe UI", sans-serif;
+  line-height: 1.45;
+}
+
+a { color: var(--accent); }
+
+a:focus-visible,
+button:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.demo-banner {
+  margin: 0;
+  padding: 0.7rem 1.25rem;
+  background: var(--banner);
+  color: var(--banner-ink);
+  font-size: 0.92rem;
+  letter-spacing: 0.01em;
+}
+
+.identity-page,
+.content {
+  padding: 1.5rem clamp(1rem, 3vw, 2.5rem) 3rem;
+}
+
+.identity-page h1,
+.content h1,
+.panel h1 {
+  font-family: "Iowan Old Style", Palatino, Georgia, serif;
+  font-weight: 560;
+  font-size: clamp(2rem, 4vw, 3.25rem);
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  margin: 0.2rem 0 0.75rem;
+}
+
+.lede { max-width: 38rem; color: var(--muted); }
+
+.identity-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.identity-grid form { margin: 0; }
+
+.identity-grid button,
+.panel button,
+.text-button {
+  font: inherit;
+  cursor: pointer;
+}
+
+.identity-grid button {
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  padding: 0.9rem 1rem;
+}
+
+.identity-grid button:hover { border-color: var(--accent); }
+
+.identity-grid .name { display: block; font-weight: 650; }
+
+.identity-grid .meta { display: block; color: var(--muted); margin-top: 0.2rem; }
+
+.shell {
+  display: grid;
+  grid-template-columns: 16rem 1fr;
+  min-height: calc(100vh - 2.8rem);
+}
+
+.side {
+  padding: 1.25rem;
+  border-right: 1px solid var(--line);
+  background: #ebe4d6;
+}
+
+.eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.identity-name { margin: 0.4rem 0 0; font-weight: 700; }
+
+.identity-title { margin: 0.15rem 0 1rem; color: var(--muted); }
+
+.side ul { list-style: none; padding: 0; margin: 0 0 1.5rem; }
+
+.side a { font-weight: 650; text-decoration: none; }
+
+.panel {
+  background: var(--card);
+  border: 1px solid var(--line);
+  padding: 1.25rem;
+}
+
+.invoice-table { width: 100%; border-collapse: collapse; background: var(--card); }
+
+.invoice-table th,
+.invoice-table td {
+  text-align: left;
+  padding: 0.75rem 0.8rem;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+.invoice-table th { font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+
+.numeric { text-align: right; font-variant-numeric: tabular-nums; }
+
+.facts { display: grid; gap: 0.85rem; margin: 1.25rem 0 0; }
+
+.facts div { display: grid; gap: 0.15rem; }
+
+.facts dt { color: var(--muted); font-size: 0.82rem; }
+
+.facts dd { margin: 0; }
+
+.notice { color: var(--danger); }
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+@media (max-width: 720px) {
+  .shell { grid-template-columns: 1fr; }
+  .side { border-right: 0; border-bottom: 1px solid var(--line); }
+  .invoice-table { display: block; overflow-x: auto; }
+}
