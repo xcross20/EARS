@@ -1,0 +1,21 @@
+{
+  "decision": "ACCEPT",
+  "reasons": [
+    "Independent evidence satisfied the deterministic gate."
+  ],
+  "evaluatedBy": "lib/autonomy/gate.ts evaluateEvidence",
+  "reviewerRecommendation": "NO_MATERIAL_DEFECTS",
+  "reviewerRecommendationUsedAsAcceptance": false,
+  "inputs": {
+    "reviewedSha": "02392bea6d73a49aacc10cdcd25420ca1ca27fd3",
+    "reviewerSessionId": "01a14644-5e16-7df0-902a-37f8b689abbd",
+    "builderSessionId": "01a1452e-fba4-7b12-b473-50b9d5a66c7f",
+    "repairAttempts": 1,
+    "maxRepairAttempts": 2,
+    "auditExitCode": 1,
+    "newCriticalAdvisory": false,
+    "survivesRestart": true,
+    "restartTested": true,
+    "concurrentDecisionsSingleTerminal": true
+  }
+}

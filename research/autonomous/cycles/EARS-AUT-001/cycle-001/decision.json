@@ -1,0 +1,21 @@
+{
+  "decision": "CONTINUE",
+  "reasons": [
+    "work_orders/EARS-003.md requires a durable approval state machine. The store does not survive restart.",
+    "EARS-003-DURABILITY is P1."
+  ],
+  "evaluatedBy": "lib/autonomy/gate.ts evaluateEvidence",
+  "reviewerRecommendationIgnoredAsAcceptance": true,
+  "inputs": {
+    "reviewedSha": "1c84e36f768b7723f990911fdbd4b91cdd20a46b",
+    "reviewerSessionId": "01a14631-0116-7471-a830-5a230e886a75",
+    "builderSessionId": "01a1452e-fba4-7b12-b473-50b9d5a66c7f",
+    "repairAttempts": 0,
+    "maxRepairAttempts": 2,
+    "auditExitCode": 1,
+    "newCriticalAdvisory": false,
+    "survivesRestart": false,
+    "restartTested": true,
+    "concurrentDecisionsSingleTerminal": true
+  }
+}

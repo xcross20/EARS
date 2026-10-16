@@ -1,0 +1,16 @@
+[
+  {
+    "id": "EARS-003-DURABILITY",
+    "severity": "P1",
+    "repairable": true,
+    "disposition": "material_gap",
+    "summary": "Approval cases, audit events, idempotency keys, and session revocation live in process-local Maps. A new process returned an empty audit log after a committed submit and approve. This does not meet the work order's durable approval state machine. NEXT.md does not approve that limitation."
+  },
+  {
+    "id": "EARS-003-AUDIT-ADVISORIES",
+    "severity": "P2",
+    "repairable": true,
+    "disposition": "documented_preexisting_risk",
+    "summary": "npm audit --audit-level=critical exits 1 with two critical tinypool advisories (GHSA-5gmw-xhrv-c9v3, GHSA-85c8-ppgw-ccpr) plus high and moderate postcss/vitest advisories. Versions match the EARS-002 base lockfile. server-only did not add them. newCriticalAdvisory is false. Do not treat exit 1 as a pass and do not force-upgrade Next or Vitest without review."
+  }
+]

@@ -1,0 +1,44 @@
+[
+  {
+    "command": "npm ci",
+    "exitCode": 0,
+    "sha": "02392bea6d73a49aacc10cdcd25420ca1ca27fd3",
+    "detail": "Installed 81 packages from the lockfile. npm printed the existing audit summary and did not change dependencies."
+  },
+  {
+    "command": "npm run typecheck",
+    "exitCode": 0,
+    "sha": "02392bea6d73a49aacc10cdcd25420ca1ca27fd3",
+    "detail": "tsc --noEmit completed with no type errors."
+  },
+  {
+    "command": "npm test",
+    "exitCode": 0,
+    "sha": "02392bea6d73a49aacc10cdcd25420ca1ca27fd3",
+    "detail": "vitest run: 4 files, 21 tests passed."
+  },
+  {
+    "command": "npx playwright install chromium",
+    "exitCode": 0,
+    "sha": "02392bea6d73a49aacc10cdcd25420ca1ca27fd3",
+    "detail": "Playwright Chromium install completed."
+  },
+  {
+    "command": "npm run test:e2e",
+    "exitCode": 0,
+    "sha": "02392bea6d73a49aacc10cdcd25420ca1ca27fd3",
+    "detail": "playwright test: 6 chromium tests passed."
+  },
+  {
+    "command": "npm run build",
+    "exitCode": 0,
+    "sha": "02392bea6d73a49aacc10cdcd25420ca1ca27fd3",
+    "detail": "next build completed for Next.js 15.5.28."
+  },
+  {
+    "command": "npm audit --audit-level=critical",
+    "exitCode": 1,
+    "sha": "02392bea6d73a49aacc10cdcd25420ca1ca27fd3",
+    "detail": "Exit 1. Advisories were only GHSA-5gmw-xhrv-c9v3, GHSA-6g55-p6wh-862q, GHSA-82fw-gwwq-j7x9, GHSA-85c8-ppgw-ccpr, GHSA-fxqj-rqcc-2cmp, GHSA-qx2v-qp2m-jg93, and GHSA-r28c-9q8g-f849. Counted as a failure, not a pass. Dependencies were not upgraded."
+  }
+]

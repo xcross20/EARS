@@ -1,0 +1,19 @@
+{
+  "workOrderId": "EARS-AUT-001",
+  "productWorkOrderId": "EARS-003",
+  "cycle": 1,
+  "candidateSha": "1c84e36f768b7723f990911fdbd4b91cdd20a46b",
+  "reviewedSha": "1c84e36f768b7723f990911fdbd4b91cdd20a46b",
+  "parentImplementationSha": "3ef495e2db19f9975dd043f2f38b618157dbc7d8",
+  "reviewerSessionId": "01a14631-0116-7471-a830-5a230e886a75",
+  "builderSessionId": "01a1452e-fba4-7b12-b473-50b9d5a66c7f",
+  "worktree": "/tmp/ears-003-r01",
+  "builderWorktree": "/Users/immanuellewis/worktrees/EARS",
+  "repairAttemptsBeforeCycle": 0,
+  "maxRepairAttempts": 2,
+  "secretsAccessed": false,
+  "liveXaiCalls": false,
+  "reviewerRecommendation": "REPAIR_REQUIRED",
+  "controllerDecision": "CONTINUE",
+  "nextAuthorizedAction": "One bounded repair of EARS-003-DURABILITY on a new branch, then a fresh independent review of the new SHA."
+}

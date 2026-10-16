@@ -1,0 +1,9 @@
+[
+  {
+    "id": "R02-01",
+    "severity": "P2",
+    "repairable": true,
+    "disposition": "documented_preexisting_risk",
+    "summary": "npm audit --audit-level=critical exits 1 because of the already approved PostCSS, Tinypool, and Vitest advisory set (GHSA-qx2v-qp2m-jg93, GHSA-6g55-p6wh-862q, GHSA-fxqj-rqcc-2cmp, GHSA-r28c-9q8g-f849, GHSA-82fw-gwwq-j7x9, GHSA-5gmw-xhrv-c9v3, GHSA-85c8-ppgw-ccpr). No critical advisory outside that set was present. This commit does not change dependencies, and dependencies were not upgraded."
+  }
+]
