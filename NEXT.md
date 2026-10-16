@@ -1,28 +1,24 @@
 # Next work order
-**ID:** EARS-001
-**Status:** READY_FOR_BUILDER (not executed)
-**Branch:** feat/ears-001-foundation (or a fresh child implementation branch)
+**ID:** EARS-002
+**Status:** QUEUED — ELIGIBLE FOR BUILDER AFTER OPERATOR KICKOFF (not started)
+**Prerequisite:** EARS-001 engineering ACCEPT recorded in `DECISION.md` on `control/ears-001-accept`.
+**Base:** accepted EARS-001 implementation `00eba687ce015d001dec0d3f3aa4d2b2874d6db2`, plus approved controller bookkeeping. Do not assume branches or PRs are merged.
+**Full specification:** `work_orders/EARS-002.md`.
 
 ## Objective
-Deliver the first browser-visible vertical slice: a seeded synthetic invoice, role-aware navigation and invoice detail screen, plus repeatable local startup and test commands.
+Deliver an authorized, evidence-grounded synthetic invoice review using procurement policies and a mock ERP, with deterministic checks, traceable citations and explicit abstention when evidence is missing.
 
-## Scope
-- Document app architecture and explicit trust boundaries before implementation.
-- Implement app shell with Analyst / Manager / Auditor demo identity selector, visibly labeled **simulation only**.
-- Seed one fictional $50,000 invoice, vendor and procurement policy fixture.
-- Implement server-side authorization checks for invoice reads; never trust client role alone (signed demo session or server-issued session).
-- Analyst sees permitted invoice and its status; manager/auditor have distinct navigation.
-- Provide automated positive and negative tests and CI.
+## Mandatory first slice
+1. Fix the R01-01 authorization footgun: `invoicesForView` must enforce the actor's allowed view at the data-access boundary; add direct helper and HTTP regression tests.
+2. Address R01-02: introduce actor-scoped data access for policies, vendors and ERP results. Raw seed exports must not be available as a shortcut to model or tool context.
+3. Verify that cross-tenant documents never enter retrieval results or model context, including negative and injection tests.
+4. Retain all EARS-001 authz and E2E tests. No real financial operations.
 
-## Exclusions
-No real SSO, real payments, public deployment, full RAG, real ERP, or production claims. No unauthenticated role spoofing via client-supplied headers.
+## Boundaries
+- Human operator initiates EARS-002; no auto-execution, merge or deployment.
+- EARS-002 may not claim a passing npm security audit. Track documented advisories and reassess any changed dependencies.
+- No production SSO, live ERP, payment execution or external data.
+- Independent Reviewer and Controller acceptance required before EARS-003.
 
-## Acceptance
-1. Documented local startup works.
-2. Browser renders seeded invoice.
-3. Unauthorized tenant/role invoice access is denied server-side.
-4. Tests run noninteractively in CI.
-5. Reviewer independently verifies behavior; Controller records evidence.
-
-## Follow-on
-EARS-002: grounded review and mock ERP. EARS-003: approval state machine and audit trail.
+## Evidence
+Commit SHA, exact commands/exit codes, test outputs, authorization and citation evaluations, independent reviewer report and Controller decision.
