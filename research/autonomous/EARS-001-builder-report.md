@@ -4,7 +4,7 @@
 **Branch:** `feat/ears-001-app`
 **Base:** `feat/ears-001-foundation` at `d9e2d4df9f4a60c19b5e9d0fe57a668e33873916`
 **Implementation commit:** `23a268e5749fcb68c9e7bb80c46a02ffd4e51ba9`
-**Evidence commit:** recorded by the commit that adds this file. `NEXT.md` stays `READY_FOR_BUILDER`. No ACCEPT entry was written to `DECISION.md`.
+**Evidence commit:** `2df08f3715b34086e2b939b1676f72d8725faa8d` added this report. The following commit writes that SHA into this line. `NEXT.md` stays `READY_FOR_BUILDER`. No ACCEPT entry was written to `DECISION.md`.
 
 ## What was implemented
 One Next.js TypeScript app. Decision and tradeoffs: `docs/adr/0001-next-fullstack-slice.md`.
