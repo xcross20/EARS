@@ -1,0 +1,15 @@
+name: Foundation checks
+on:
+  push:
+  pull_request:
+jobs:
+  foundation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify mission and work order documents
+        run: |
+          for file in MISSION.md STRATEGY.md AUTONOMY.md NEXT.md STATE.md DECISION.md docs/user-journey-J001.md docs/threat-model.md docs/evaluation-plan.md; do
+            test -s "$file" || exit 1
+          done
+          echo 'Foundation documents present'
