@@ -7,6 +7,7 @@ import { findEmployee } from "@/lib/seed";
 import {
   employeeIdFromLoginBody,
   issueSessionToken,
+  revokePresentedSession,
   SESSION_COOKIE,
   SESSION_TTL_MS,
   sessionCookieOptions,
@@ -43,6 +44,14 @@ export async function POST(request: Request) {
 
 export async function DELETE() {
   const jar = await cookies();
+  const token = jar.get(SESSION_COOKIE)?.value;
+  if (token) {
+    try {
+      revokePresentedSession(token, Date.now(), sessionSecret());
+    } catch {
+      // The cookie is still cleared when the signing secret is unusable.
+    }
+  }
   jar.delete(SESSION_COOKIE);
   return json({ ok: true }, 200);
 }

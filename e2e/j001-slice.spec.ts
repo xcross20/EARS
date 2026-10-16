@@ -112,6 +112,13 @@ test("server denies spoofed headers, cross-tenant reads, approval, and payment",
   expect(pay.status()).toBe(403);
   expect(await pay.json()).toEqual({ error: "operation_forbidden", operation: "pay" });
 
+  const crossDecision = await page.request.post("/api/invoices/inv_harbor_50000/decision", {
+    data: { expectedVersion: 0, outcome: "approve", rationale: "Cross-tenant approval." },
+    headers: { "x-role": "manager", "x-tenant-id": "tenant_harbor" },
+  });
+  expect(crossDecision.status()).toBe(403);
+  expect(await crossDecision.text()).not.toContain("Cedar");
+
   const leakedReview = await page.request.post("/api/invoices/inv_harbor_50000/review", {
     headers: { "x-role": "manager", "x-tenant-id": "tenant_harbor" },
   });
@@ -130,6 +137,72 @@ test("server denies spoofed headers, cross-tenant reads, approval, and payment",
   ]);
   const tampered = await page.request.get("/api/session");
   expect(tampered.status()).toBe(401);
+});
+
+test("analyst submits, manager decides, and the auditor reads the trace", async ({ page, playwright }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: /Avery Chen/ }).click();
+  await expect(page.getByRole("heading", { name: "Assigned invoices" })).toBeVisible();
+  const session = (await page.context().cookies("http://127.0.0.1:3000")).find(
+    (cookie) => cookie.name === "ears_demo_session",
+  );
+  expect(session?.value).toBeTruthy();
+  await page.getByRole("button", { name: "End demo session" }).click();
+  await expect(page.getByText(DEMO_AUTH_LABEL)).toBeVisible();
+  const replay = await playwright.request.newContext({
+    baseURL: "http://127.0.0.1:3000",
+    extraHTTPHeaders: { cookie: `ears_demo_session=${session?.value}` },
+  });
+  const replaySubmit = await replay.post("/api/invoices/inv_harbor_50000/submit", {
+    data: { expectedVersion: 0 },
+  });
+  expect(replaySubmit.status()).toBe(401);
+  expect(await replaySubmit.text()).not.toContain("Cedar");
+  await replay.dispose();
+
+  await page.getByRole("button", { name: /Avery Chen/ }).click();
+  await page.getByRole("link", { name: "INV-HBR-2026-0042" }).click();
+  await page.getByRole("button", { name: "Run AI review" }).click();
+  await expect(page.getByRole("heading", { name: "Refer to a manager. This is not an approval." })).toBeVisible();
+  await page.getByRole("button", { name: "Submit to manager" }).click();
+  await expect(page.getByRole("heading", { name: "Submitted for a manager decision" })).toBeVisible();
+  await expect(page.getByText("No payment was sent.")).toBeVisible();
+
+  const again = await page.request.post("/api/invoices/inv_harbor_50000/submit", {
+    data: { expectedVersion: 0 },
+  });
+  expect(again.status()).toBe(200);
+  expect(await again.json()).toMatchObject({ idempotentReplay: true });
+  const analystDecision = await page.request.post("/api/invoices/inv_harbor_50000/decision", {
+    data: { expectedVersion: 1, outcome: "approve", rationale: "Analysts cannot approve." },
+  });
+  expect(analystDecision.status()).toBe(403);
+
+  await page.getByRole("button", { name: "End demo session" }).click();
+  await page.getByRole("button", { name: /Morgan Hale/ }).click();
+  await page.getByRole("link", { name: "INV-HBR-2026-0042" }).click();
+  await expect(page.getByRole("heading", { name: "Manager decision" })).toBeVisible();
+  await expect(page.getByText("Synthetic Procurement Policy 2026.1")).toBeVisible();
+  await page.getByLabel("Rationale").fill("Threshold exception reviewed. No payment.");
+  await page.getByRole("button", { name: "Record manager approval" }).click();
+  await expect(page.getByText("No payment was sent.")).toBeVisible();
+  const pay = await page.request.post("/api/payments", { data: { amountCents: 5_000_000 } });
+  expect(pay.status()).toBe(403);
+  const replayDecision = await page.request.post("/api/invoices/inv_harbor_50000/decision", {
+    data: { expectedVersion: 1, outcome: "approve", rationale: "A second approval must not commit." },
+  });
+  expect(replayDecision.status()).toBe(200);
+  expect(await replayDecision.json()).toMatchObject({ idempotentReplay: true, decision: { paymentExecuted: false } });
+
+  await page.getByRole("button", { name: "End demo session" }).click();
+  await page.getByRole("button", { name: /Quinn Adler/ }).click();
+  await expect(page.getByRole("heading", { name: "Chronological audit" })).toBeVisible();
+  await expect(page.getByText("Threshold exception reviewed. No payment.")).toBeVisible();
+  await expect(page.getByText("Synthetic Procurement Policy 2026.1").first()).toBeVisible();
+  await expect(page.getByText("Summit Synthetic Purchasing Note")).toHaveCount(0);
+  const tamper = await page.request.post("/api/audit", { data: { rationale: "tampered" } });
+  expect(tamper.status()).toBe(405);
+  expect(await tamper.text()).not.toContain("tampered");
 });
 
 test("the invoice list is usable on a narrow viewport", async ({ page }) => {

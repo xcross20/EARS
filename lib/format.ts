@@ -1,3 +1,5 @@
+import type { InvoiceStatus } from "./types";
+
 export function formatUsd(amountCents: number): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -16,9 +18,15 @@ export function formatIsoDate(isoDate: string): string {
   }).format(new Date(Date.UTC(year, month - 1, day)));
 }
 
-export function statusLabel(status: "awaiting_analyst_review"): string {
+export function statusLabel(status: InvoiceStatus): string {
   if (status === "awaiting_analyst_review") {
     return "Awaiting analyst review";
   }
-  return status;
+  if (status === "pending_manager_decision") {
+    return "Pending manager decision";
+  }
+  if (status === "manager_approved") {
+    return "Manager approved. No payment sent.";
+  }
+  return "Manager rejected. No payment sent.";
 }

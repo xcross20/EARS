@@ -1,18 +1,26 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { actorFromRequestParts } from "../lib/authority";
 import {
   employeeIdFromLoginBody,
   issueSessionToken,
   readSessionToken,
+  reloadSessionsFromDiskForTests,
+  resetSessionRegistry,
+  revokePresentedSession,
   sessionSecret,
 } from "../lib/session";
 
 const SECRET = "unit-test-session-secret";
 const NOW = Date.parse("2026-10-16T12:00:00Z");
 
+beforeEach(() => {
+  resetSessionRegistry();
+});
+
 afterEach(() => {
   delete process.env.EARS_DEMO_SESSION_SECRET;
+  resetSessionRegistry();
 });
 
 describe("demo session", () => {
@@ -26,7 +34,20 @@ describe("demo session", () => {
     };
     expect(payload.employeeId).toBe("emp_avery_chen");
     expect(payload.role).toBeUndefined();
+    expect(payload).not.toHaveProperty("tenantId");
     expect(readSessionToken(token!, NOW + 1000, SECRET)?.employeeId).toBe("emp_avery_chen");
+  });
+
+  it("rejects a copied cookie after the server revokes the session", () => {
+    const token = issueSessionToken("emp_avery_chen", NOW, SECRET)!;
+    expect(readSessionToken(token, NOW + 1000, SECRET)?.employeeId).toBe("emp_avery_chen");
+    revokePresentedSession(token, NOW + 1000, SECRET);
+    expect(readSessionToken(token, NOW + 1000, SECRET)).toBeNull();
+    reloadSessionsFromDiskForTests();
+    expect(readSessionToken(token, NOW + 1000, SECRET)).toBeNull();
+    expect(
+      actorFromRequestParts({ sessionToken: token, headerRole: "manager", headerTenant: "tenant_harbor" }, NOW + 1000, SECRET),
+    ).toBeNull();
   });
 
   it("rejects a tampered signature, an expired token, and an unknown employee", () => {

@@ -1,6 +1,9 @@
+import "server-only";
+
 import type { AuthorizedPacket, ModelDraft, ReviewModel } from "./types";
 
 const MODEL_ID = "grok-4.7";
+export const XAI_TIMEOUT_MS = 8_000;
 
 export function modelRequestBody(packet: AuthorizedPacket): {
   model: string;
@@ -41,6 +44,7 @@ export function xaiReviewModel(apiKey: string, fetchImpl: typeof fetch = fetch):
           authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify(modelRequestBody(packet)),
+        signal: AbortSignal.timeout(XAI_TIMEOUT_MS),
       });
       if (!response.ok) {
         return null;

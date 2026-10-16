@@ -7,6 +7,7 @@ import { homePath } from "./authz";
 import { findEmployee } from "./seed";
 import {
   issueSessionToken,
+  revokePresentedSession,
   SESSION_COOKIE,
   SESSION_TTL_MS,
   sessionCookieOptions,
@@ -27,6 +28,14 @@ export async function startDemoSession(formData: FormData): Promise<void> {
 
 export async function endDemoSession(): Promise<void> {
   const jar = await cookies();
+  const token = jar.get(SESSION_COOKIE)?.value;
+  if (token) {
+    try {
+      revokePresentedSession(token, Date.now(), sessionSecret());
+    } catch {
+      // The cookie is still cleared when the signing secret is unusable.
+    }
+  }
   jar.delete(SESSION_COOKIE);
   redirect("/");
 }

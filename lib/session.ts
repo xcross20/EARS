@@ -1,6 +1,9 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
+
+import "server-only";
 
 import { findEmployee } from "./seed";
+import { readStateFile, removeStateFile, writeStateFile } from "./state-file";
 
 export const SESSION_COOKIE = "ears_demo_session";
 export const SESSION_TTL_MS = 8 * 60 * 60 * 1000;
@@ -15,8 +18,59 @@ const REJECTED_SECRETS = new Set([
 type SessionPayload = {
   v: 1;
   employeeId: string;
+  sessionId: string;
   exp: number;
 };
+
+type SessionRecord = {
+  employeeId: string;
+  exp: number;
+  revoked: boolean;
+};
+
+const SESSION_FILE = "sessions.json";
+const sessions = new Map<string, SessionRecord>();
+let sessionsLoaded = false;
+
+function persistSessions(): void {
+  writeStateFile(SESSION_FILE, [...sessions.entries()]);
+}
+
+function ensureSessionsLoaded(): void {
+  if (sessionsLoaded) {
+    return;
+  }
+  sessionsLoaded = true;
+  const parsed = readStateFile(SESSION_FILE);
+  if (parsed === null) {
+    return;
+  }
+  if (!Array.isArray(parsed)) {
+    throw new Error("EARS state file sessions.json is unreadable");
+  }
+  for (const entry of parsed) {
+    if (!Array.isArray(entry) || typeof entry[0] !== "string" || !entry[1] || typeof entry[1] !== "object") {
+      throw new Error("EARS state file sessions.json is unreadable");
+    }
+    const record = entry[1] as SessionRecord;
+    if (typeof record.employeeId !== "string" || typeof record.exp !== "number" || typeof record.revoked !== "boolean") {
+      throw new Error("EARS state file sessions.json is unreadable");
+    }
+    sessions.set(entry[0], record);
+  }
+}
+
+export function resetSessionRegistry(): void {
+  sessions.clear();
+  sessionsLoaded = true;
+  removeStateFile(SESSION_FILE);
+}
+
+export function reloadSessionsFromDiskForTests(): void {
+  sessions.clear();
+  sessionsLoaded = false;
+  ensureSessionsLoaded();
+}
 
 export function sessionSecret(): string {
   const secret = process.env.EARS_DEMO_SESSION_SECRET;
@@ -49,10 +103,16 @@ export function issueSessionToken(employeeId: string, nowMs: number, secret: str
   if (!employee) {
     return null;
   }
+  ensureSessionsLoaded();
+  const sessionId = randomBytes(16).toString("base64url");
+  const exp = nowMs + SESSION_TTL_MS;
+  sessions.set(sessionId, { employeeId: employee.employeeId, exp, revoked: false });
+  persistSessions();
   const payload: SessionPayload = {
     v: 1,
     employeeId: employee.employeeId,
-    exp: nowMs + SESSION_TTL_MS,
+    sessionId,
+    exp,
   };
   const body = Buffer.from(JSON.stringify(payload)).toString("base64url");
   const signature = createHmac("sha256", secret).update(body).digest("base64url");
@@ -63,7 +123,7 @@ export function readSessionToken(
   token: string,
   nowMs: number,
   secret: string,
-): { employeeId: string } | null {
+): { employeeId: string; sessionId: string } | null {
   const parts = token.split(".");
   if (parts.length !== 2) {
     return null;
@@ -87,16 +147,39 @@ export function readSessionToken(
   } catch {
     return null;
   }
-  if (parsed.v !== 1 || typeof parsed.employeeId !== "string" || typeof parsed.exp !== "number") {
+  if (
+    parsed.v !== 1 ||
+    typeof parsed.employeeId !== "string" ||
+    typeof parsed.sessionId !== "string" ||
+    typeof parsed.exp !== "number"
+  ) {
     return null;
   }
   if (parsed.exp <= nowMs) {
     return null;
   }
+  ensureSessionsLoaded();
+  const record = sessions.get(parsed.sessionId);
+  if (!record || record.revoked || record.employeeId !== parsed.employeeId || record.exp <= nowMs) {
+    return null;
+  }
   if (!findEmployee(parsed.employeeId)) {
     return null;
   }
-  return { employeeId: parsed.employeeId };
+  return { employeeId: parsed.employeeId, sessionId: parsed.sessionId };
+}
+
+export function revokePresentedSession(token: string, nowMs: number, secret: string): void {
+  const session = readSessionToken(token, nowMs, secret);
+  if (!session) {
+    return;
+  }
+  ensureSessionsLoaded();
+  const record = sessions.get(session.sessionId);
+  if (record) {
+    record.revoked = true;
+    persistSessions();
+  }
 }
 
 export function employeeIdFromLoginBody(body: unknown): string | null {
