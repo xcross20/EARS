@@ -21,7 +21,10 @@ export function buildAuthorizedPacket(
   if (!readable.ok) {
     return { ok: false, reason: "access_denied" };
   }
-  const { invoice, policy } = readable.detail;
+  const { invoice, policy, relation } = readable.detail;
+  if (relation === "cross_tenant" || !policy || policy.tenantId !== invoice.tenantId) {
+    return { ok: false, reason: relation === "missing" ? "not_found" : "access_denied" };
+  }
   const allowedPolicies = policiesForActor(actor);
   if (!allowedPolicies.some((item) => item.policyId === policy.policyId)) {
     return { ok: false, reason: "access_denied" };

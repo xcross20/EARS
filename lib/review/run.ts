@@ -3,7 +3,7 @@ import { deterministicDraft, reviewFromDraft } from "./accept";
 import { reviewHeadline } from "./headline";
 import { buildAuthorizedPacket } from "./packet";
 import type { Actor } from "../types";
-import type { EvidenceReview, ReviewModel } from "./types";
+import type { EvidenceReview, ModelDraft, ModelReport, ReviewModel } from "./types";
 import { xaiReviewModel } from "./xai";
 
 export function selectReviewModel(env: NodeJS.ProcessEnv = process.env): ReviewModel {
@@ -28,8 +28,18 @@ function abstain(documentIds: readonly string[] = []): EvidenceReview {
     citations: [],
     checks: [],
     documentIds,
-    model: { provider: "deterministic", called: false },
+    model: { provider: "deterministic", called: false, mode: "deterministic" },
   };
+}
+
+function reportFor(model: ReviewModel, draft: ModelDraft | null): ModelReport {
+  if (model.provider === "deterministic") {
+    return { provider: "deterministic", called: false, mode: "deterministic" };
+  }
+  if (!draft) {
+    return { provider: "deterministic", called: false, mode: "provider_fallback" };
+  }
+  return { provider: model.provider, called: true, mode: "provider" };
 }
 
 export async function reviewInvoice(
@@ -51,24 +61,26 @@ export async function reviewInvoice(
     }
     return { ok: true, review: abstain([readable.detail.invoice.invoiceId]) };
   }
-  let draft = null;
-  let called = false;
+  let draft: ModelDraft | null = null;
   try {
     draft = await model.draft(built.packet);
-    called = model.provider !== "deterministic";
   } catch {
     draft = null;
-    called = false;
   }
+  const report = reportFor(model, draft);
   if (!draft) {
     draft = deterministicDraft(built.packet);
+  }
+  try {
+    return { ok: true, review: reviewFromDraft(built.packet, draft, report) };
+  } catch {
     return {
       ok: true,
-      review: reviewFromDraft(built.packet, draft, { provider: "deterministic", called: false }),
+      review: {
+        ...abstain(built.packet.documentIds),
+        summary: "The model draft was not a usable citation list. No decision was taken from it.",
+        model: report.mode === "deterministic" ? report : { ...report, mode: "provider_fallback", called: false },
+      },
     };
   }
-  return {
-    ok: true,
-    review: reviewFromDraft(built.packet, draft, { provider: model.provider, called }),
-  };
 }

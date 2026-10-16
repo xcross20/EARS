@@ -1,4 +1,6 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
+
+import "server-only";
 
 import { findEmployee } from "./seed";
 
@@ -15,8 +17,21 @@ const REJECTED_SECRETS = new Set([
 type SessionPayload = {
   v: 1;
   employeeId: string;
+  sessionId: string;
   exp: number;
 };
+
+type SessionRecord = {
+  employeeId: string;
+  exp: number;
+  revoked: boolean;
+};
+
+const sessions = new Map<string, SessionRecord>();
+
+export function resetSessionRegistry(): void {
+  sessions.clear();
+}
 
 export function sessionSecret(): string {
   const secret = process.env.EARS_DEMO_SESSION_SECRET;
@@ -49,10 +64,14 @@ export function issueSessionToken(employeeId: string, nowMs: number, secret: str
   if (!employee) {
     return null;
   }
+  const sessionId = randomBytes(16).toString("base64url");
+  const exp = nowMs + SESSION_TTL_MS;
+  sessions.set(sessionId, { employeeId: employee.employeeId, exp, revoked: false });
   const payload: SessionPayload = {
     v: 1,
     employeeId: employee.employeeId,
-    exp: nowMs + SESSION_TTL_MS,
+    sessionId,
+    exp,
   };
   const body = Buffer.from(JSON.stringify(payload)).toString("base64url");
   const signature = createHmac("sha256", secret).update(body).digest("base64url");
@@ -63,7 +82,7 @@ export function readSessionToken(
   token: string,
   nowMs: number,
   secret: string,
-): { employeeId: string } | null {
+): { employeeId: string; sessionId: string } | null {
   const parts = token.split(".");
   if (parts.length !== 2) {
     return null;
@@ -87,16 +106,36 @@ export function readSessionToken(
   } catch {
     return null;
   }
-  if (parsed.v !== 1 || typeof parsed.employeeId !== "string" || typeof parsed.exp !== "number") {
+  if (
+    parsed.v !== 1 ||
+    typeof parsed.employeeId !== "string" ||
+    typeof parsed.sessionId !== "string" ||
+    typeof parsed.exp !== "number"
+  ) {
     return null;
   }
   if (parsed.exp <= nowMs) {
     return null;
   }
+  const record = sessions.get(parsed.sessionId);
+  if (!record || record.revoked || record.employeeId !== parsed.employeeId || record.exp <= nowMs) {
+    return null;
+  }
   if (!findEmployee(parsed.employeeId)) {
     return null;
   }
-  return { employeeId: parsed.employeeId };
+  return { employeeId: parsed.employeeId, sessionId: parsed.sessionId };
+}
+
+export function revokePresentedSession(token: string, nowMs: number, secret: string): void {
+  const session = readSessionToken(token, nowMs, secret);
+  if (!session) {
+    return;
+  }
+  const record = sessions.get(session.sessionId);
+  if (record) {
+    record.revoked = true;
+  }
 }
 
 export function employeeIdFromLoginBody(body: unknown): string | null {

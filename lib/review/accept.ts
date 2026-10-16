@@ -1,5 +1,5 @@
 import { reviewHeadline } from "./headline";
-import type { AuthorizedPacket, EvidenceReview, ModelDraft, ReviewModel, ReviewOutcome } from "./types";
+import type { AuthorizedPacket, EvidenceReview, ModelDraft, ModelReport, ReviewOutcome } from "./types";
 
 function outcomeFromChecks(packet: AuthorizedPacket): ReviewOutcome {
   const threshold = packet.checks.find((check) => check.checkId === "threshold");
@@ -24,14 +24,37 @@ export function deterministicDraft(packet: AuthorizedPacket): ModelDraft {
   };
 }
 
+function citationIdsFromDraft(draft: ModelDraft): readonly string[] | null {
+  if (!draft || typeof draft !== "object" || !Array.isArray(draft.citationIds)) {
+    return null;
+  }
+  if (!draft.citationIds.every((citationId) => typeof citationId === "string")) {
+    return null;
+  }
+  return draft.citationIds;
+}
+
 export function reviewFromDraft(
   packet: AuthorizedPacket,
   draft: ModelDraft,
-  model: { provider: ReviewModel["provider"]; called: boolean },
+  model: ModelReport,
 ): EvidenceReview {
+  const citationIds = citationIdsFromDraft(draft);
+  if (!citationIds) {
+    return {
+      outcome: "abstain",
+      headline: reviewHeadline("abstain"),
+      summary: "The model draft was not a usable citation list. No decision was taken from it.",
+      isAuthorization: false,
+      citations: [],
+      checks: packet.checks,
+      documentIds: packet.documentIds,
+      model,
+    };
+  }
   const allowed = new Set(packet.citations.map((citation) => citation.citationId));
-  const cited = draft.citationIds.filter((citationId) => allowed.has(citationId));
-  if (cited.length !== draft.citationIds.length || cited.length === 0) {
+  const cited = citationIds.filter((citationId) => allowed.has(citationId));
+  if (cited.length !== citationIds.length || cited.length === 0) {
     return {
       outcome: "abstain",
       headline: reviewHeadline("abstain"),

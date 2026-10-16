@@ -4,6 +4,7 @@ import { AppShell } from "@/components/AppShell";
 import { DeniedState } from "@/components/DeniedState";
 import { EmptyState } from "@/components/EmptyState";
 import { ErrorState } from "@/components/ErrorState";
+import { AuditTrail } from "@/components/AuditTrail";
 import { InvoiceTable } from "@/components/InvoiceTable";
 import { currentActor } from "@/lib/actor";
 import { authorizeListView, listViewTitle } from "@/lib/authz";
@@ -58,8 +59,13 @@ function InvoiceListBody({
   if (!listed.ok) {
     return <DeniedState actor={actor} />;
   }
-  if (listed.invoices.length === 0) {
+  if (listed.invoices.length === 0 && view !== "evidence") {
     return <EmptyState />;
   }
-  return <InvoiceTable invoices={listed.invoices} />;
+  return (
+    <>
+      {view === "evidence" ? <AuditTrail actor={actor} /> : null}
+      {listed.invoices.length === 0 ? <EmptyState /> : <InvoiceTable invoices={listed.invoices} />}
+    </>
+  );
 }

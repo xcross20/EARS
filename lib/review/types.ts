@@ -33,6 +33,12 @@ export type ReviewModel = {
   draft(packet: AuthorizedPacket): Promise<ModelDraft | null>;
 };
 
+export type ModelReport = {
+  provider: ReviewModel["provider"];
+  called: boolean;
+  mode: "deterministic" | "provider" | "provider_fallback";
+};
+
 export type EvidenceReview = {
   outcome: ReviewOutcome;
   headline: string;
@@ -41,5 +47,5 @@ export type EvidenceReview = {
   citations: readonly ReviewCitation[];
   checks: readonly ReviewCheck[];
   documentIds: readonly string[];
-  model: { provider: ReviewModel["provider"]; called: boolean };
+  model: ModelReport;
 };

@@ -26,7 +26,7 @@ export function InvoiceTable({ invoices }: { invoices: readonly Invoice[] }) {
               <td>
                 <Link href={`/invoices/${invoice.invoiceId}`}>{invoice.invoiceNumber}</Link>
               </td>
-              <td>{vendorLegalName(invoice.vendorId)}</td>
+              <td>{vendorLegalName(invoice)}</td>
               <td>{formatIsoDate(invoice.issuedOn)}</td>
               <td className="numeric">{formatUsd(invoice.amountCents)}</td>
               <td>{statusLabel(invoice.status)}</td>

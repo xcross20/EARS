@@ -1,12 +1,16 @@
 import { authorizeListView, canReadInvoice } from "./authz";
+import { workflowStatus } from "./cases";
 import { findEmployee, findInvoice, findPolicy, findVendor, invoiceRecords } from "./seed";
 import type { Actor, Employee, Invoice, ListView, PolicyMetadata, Vendor } from "./types";
 
+export type RelationState = "consistent" | "missing" | "cross_tenant";
+
 export type InvoiceDetail = {
   invoice: Invoice;
-  vendor: Vendor;
-  policy: PolicyMetadata;
-  assignee: Employee;
+  vendor: Vendor | null;
+  policy: PolicyMetadata | null;
+  assignee: Employee | null;
+  relation: RelationState;
 };
 
 export type InvoiceListResult =
@@ -17,15 +21,17 @@ export function invoicesForView(actor: Actor, view: ListView): InvoiceListResult
   if (!authorizeListView(actor, view)) {
     return { ok: false, reason: "access_denied" };
   }
-  const invoices = invoiceRecords().filter((invoice) => {
-    if (invoice.tenantId !== actor.tenantId) {
-      return false;
-    }
-    if (view === "assigned") {
-      return invoice.assignedAnalystEmployeeId === actor.employeeId;
-    }
-    return true;
-  });
+  const invoices = invoiceRecords()
+    .filter((invoice) => {
+      if (invoice.tenantId !== actor.tenantId) {
+        return false;
+      }
+      if (view === "assigned") {
+        return invoice.assignedAnalystEmployeeId === actor.employeeId;
+      }
+      return true;
+    })
+    .map((invoice) => ({ ...invoice, status: workflowStatus(invoice.invoiceId) }));
   return { ok: true, invoices };
 }
 
@@ -46,6 +52,13 @@ export function policiesForActor(actor: Actor): readonly PolicyMetadata[] {
   return policies;
 }
 
+function sameTenant<T extends { tenantId: string }>(invoice: Invoice, record: T | undefined): T | null {
+  if (!record || record.tenantId !== invoice.tenantId) {
+    return null;
+  }
+  return record;
+}
+
 export function readInvoiceForActor(
   actor: Actor | null,
   invoiceId: string,
@@ -57,13 +70,31 @@ export function readInvoiceForActor(
   if (!invoice || !canReadInvoice(actor, invoice)) {
     return { ok: false, reason: "access_denied" };
   }
-  const vendor = findVendor(invoice.vendorId);
-  const policy = findPolicy(invoice.policyId);
-  const assignee = findEmployee(invoice.assignedAnalystEmployeeId);
-  if (!vendor || !policy || !assignee) {
-    throw new Error(`Invoice ${invoice.invoiceId} is missing seed relations`);
+  const vendorRecord = findVendor(invoice.vendorId);
+  const policyRecord = findPolicy(invoice.policyId);
+  const assigneeRecord = findEmployee(invoice.assignedAnalystEmployeeId);
+  const vendor = sameTenant(invoice, vendorRecord);
+  const policy = sameTenant(invoice, policyRecord);
+  const assignee = sameTenant(invoice, assigneeRecord);
+  const foreign = Boolean(
+    (vendorRecord && !vendor) || (policyRecord && !policy) || (assigneeRecord && !assignee),
+  );
+  const relation: RelationState = foreign
+    ? "cross_tenant"
+    : !vendor || !policy || !assignee
+      ? "missing"
+      : "consistent";
+  const visibleInvoice: Invoice = { ...invoice, status: workflowStatus(invoice.invoiceId) };
+  if (vendorRecord && !vendor) {
+    visibleInvoice.vendorId = "redacted";
   }
-  return { ok: true, detail: { invoice, vendor, policy, assignee } };
+  if (policyRecord && !policy) {
+    visibleInvoice.policyId = "redacted";
+  }
+  if (assigneeRecord && !assignee) {
+    visibleInvoice.assignedAnalystEmployeeId = "redacted";
+  }
+  return { ok: true, detail: { invoice: visibleInvoice, vendor, policy, assignee, relation } };
 }
 
 export function sameTenantInvoiceNumberCount(invoice: Invoice): number {
@@ -72,22 +103,22 @@ export function sameTenantInvoiceNumberCount(invoice: Invoice): number {
   ).length;
 }
 
-export function vendorLegalName(vendorId: string): string | undefined {
-  return findVendor(vendorId)?.legalName;
+export function vendorLegalName(invoice: Invoice): string {
+  const vendor = findVendor(invoice.vendorId);
+  if (!vendor || vendor.tenantId !== invoice.tenantId) {
+    return "Vendor record unavailable";
+  }
+  return vendor.legalName;
 }
 
 export function publicInvoice(invoice: Invoice) {
-  const vendor = findVendor(invoice.vendorId);
-  if (!vendor) {
-    throw new Error(`Invoice ${invoice.invoiceId} is missing a vendor`);
-  }
   return {
     invoiceId: invoice.invoiceId,
     invoiceNumber: invoice.invoiceNumber,
     amountCents: invoice.amountCents,
     currency: invoice.currency,
     status: invoice.status,
-    vendorLegalName: vendor.legalName,
+    vendorLegalName: vendorLegalName(invoice),
     issuedOn: invoice.issuedOn,
     dueOn: invoice.dueOn,
   };

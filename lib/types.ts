@@ -4,7 +4,11 @@ export type Role = (typeof ROLES)[number];
 
 export type ListView = "assigned" | "oversight" | "evidence";
 
-export type InvoiceStatus = "awaiting_analyst_review";
+export type InvoiceStatus =
+  | "awaiting_analyst_review"
+  | "pending_manager_decision"
+  | "manager_approved"
+  | "manager_rejected";
 
 export type Tenant = {
   tenantId: string;

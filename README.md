@@ -31,7 +31,7 @@ npm ci
 npm run dev
 ```
 
-Open `http://127.0.0.1:3000`. Choose **Avery Chen**. The assigned invoice is `INV-HBR-2026-0042` for **$50,000.00**. On that invoice, **Run AI review** returns a cited recommendation. Without `XAI_API_KEY`, the draft is deterministic and no external model is called. The review is not an approval.
+Open `http://127.0.0.1:3000`. Choose **Avery Chen**. The assigned invoice is `INV-HBR-2026-0042` for **$50,000.00**. On that invoice, **Run AI review** returns a cited recommendation. Without `XAI_API_KEY`, the draft is deterministic and no external model is called. The review is not an approval. Avery can submit that recommendation. Morgan can record a decision. Quinn can read the audit trail. Nothing in that path sends a payment.
 
 Stop the dev server with Ctrl-C. A production-mode local process is:
 
@@ -53,7 +53,7 @@ npm run test:e2e
 `npm run test:e2e` builds the app and starts it with a throwaway signing secret. CI runs the same commands in `.github/workflows/ci.yml`.
 
 ## Authorization
-The browser can select a seeded employee. The server then sets an httpOnly signed cookie. Role and tenant come from the seed, not from request headers or extra JSON fields. Cross-tenant invoice reads return 403. Approval and payment routes return 403 and do not move money.
+The browser can select a seeded employee. The server then sets an httpOnly signed cookie and keeps a server-side session record. Ending the demo session revokes that record, so a copied cookie stops working. Role and tenant come from the seed, not from request headers or extra JSON fields. Cross-tenant invoice reads return 403. `POST /api/payments` and `POST /api/invoices/:id/approve` stay forbidden. A manager decision records a synthetic outcome and does not move money.
 
 ## Architecture
 `docs/adr/0001-next-fullstack-slice.md`
