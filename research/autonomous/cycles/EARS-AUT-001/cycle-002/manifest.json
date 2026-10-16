@@ -32,5 +32,6 @@
     "paymentHttpStatus": 403,
     "stateFilesContainedSessionSecret": false
   },
-  "nextAuthorizedAction": "Record engineering ACCEPT on a control branch from the reviewed SHA. Do not merge, deploy, or start another product work order."
+  "ledgerCommit": "e5fddf67df702c6194a9dc391b5336f5ff8c63a0",
+  "nextAuthorizedAction": "Human owner may review the draft pull request. Do not merge, deploy, or start another product work order."
 }

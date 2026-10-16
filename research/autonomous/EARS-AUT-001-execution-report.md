@@ -28,4 +28,4 @@ Repair attempts used: 1 of 2. No merge. No deployment. No live xAI call. No exte
 
 Builder and cycle 001 durations were not retained as measurements. Cost was not instrumented. Concurrency evidence is single-process. Local JSON state is not a tamper-proof log and has no cross-process lock. The known dependency advisories remain a failing audit.
 
-The control-branch ledger commit is recorded after this file if the accept commit succeeds. This report is not that commit.
+Ledger commit: `e5fddf67df702c6194a9dc391b5336f5ff8c63a0` on `control/ears-003-accept`, parent `02392bea6d73a49aacc10cdcd25420ca1ca27fd3`. It updates `DECISION.md`, `STATE.md`, and `NEXT.md` only. `acceptanceAlreadyRecorded` was false on the parent ledger and true after that commit. No second acceptance commit was made.
