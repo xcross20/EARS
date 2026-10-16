@@ -1,0 +1,19 @@
+project: EARS
+mission_file: MISSION.md
+strategy_file: STRATEGY.md
+next_file: NEXT.md
+state_file: STATE.md
+decision_file: DECISION.md
+builder: grok-cli
+reviewer: independent
+controller:
+  mode: proposed-adapter-not-yet-wired
+  max_retries: 2
+  require_clean_tree: true
+  require_review: true
+  require_tests: true
+  allow_auto_merge: false
+  allow_deploy: false
+rethink:
+  triggers: [repeated_block, material_security_failure, invalidated_hypothesis, unnecessary_complexity]
+  require_human_approval_for_strategy_change: true
