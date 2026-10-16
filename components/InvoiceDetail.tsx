@@ -1,10 +1,11 @@
+import { ReviewPanel } from "@/components/ReviewPanel";
 import { formatIsoDate, formatUsd, statusLabel } from "@/lib/format";
-import type { Actor } from "@/lib/types";
 import type { InvoiceDetail as InvoiceDetailModel } from "@/lib/invoices";
+import type { Actor } from "@/lib/types";
 
 function roleNote(actor: Actor): string {
   if (actor.role === "analyst") {
-    return "You can read this assigned invoice. Submission and approval are not part of this slice.";
+    return "You can run an evidence review. It is not an approval and it cannot submit a payment.";
   }
   if (actor.role === "manager") {
     return "Oversight is read-only here. Approval is not available and cannot be performed from this screen.";
@@ -55,6 +56,7 @@ export function InvoiceDetail({ actor, detail }: { actor: Actor; detail: Invoice
           </dd>
         </div>
       </dl>
+      {actor.role === "analyst" ? <ReviewPanel invoiceId={invoice.invoiceId} /> : null}
     </article>
   );
 }

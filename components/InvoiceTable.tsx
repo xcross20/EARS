@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { formatIsoDate, formatUsd, statusLabel } from "@/lib/format";
-import { findVendor } from "@/lib/seed";
+import { vendorLegalName } from "@/lib/invoices";
 import type { Invoice } from "@/lib/types";
 
 export function InvoiceTable({ invoices }: { invoices: readonly Invoice[] }) {
@@ -21,13 +21,12 @@ export function InvoiceTable({ invoices }: { invoices: readonly Invoice[] }) {
       </thead>
       <tbody>
         {invoices.map((invoice) => {
-          const vendor = findVendor(invoice.vendorId);
           return (
             <tr key={invoice.invoiceId}>
               <td>
                 <Link href={`/invoices/${invoice.invoiceId}`}>{invoice.invoiceNumber}</Link>
               </td>
-              <td>{vendor?.legalName}</td>
+              <td>{vendorLegalName(invoice.vendorId)}</td>
               <td>{formatIsoDate(invoice.issuedOn)}</td>
               <td className="numeric">{formatUsd(invoice.amountCents)}</td>
               <td>{statusLabel(invoice.status)}</td>

@@ -1,5 +1,5 @@
-import { canReadInvoice } from "./authz";
-import { findEmployee, findInvoice, findPolicy, findVendor, invoices } from "./seed";
+import { authorizeListView, canReadInvoice } from "./authz";
+import { findEmployee, findInvoice, findPolicy, findVendor, invoiceRecords } from "./seed";
 import type { Actor, Employee, Invoice, ListView, PolicyMetadata, Vendor } from "./types";
 
 export type InvoiceDetail = {
@@ -9,8 +9,15 @@ export type InvoiceDetail = {
   assignee: Employee;
 };
 
-export function invoicesForView(actor: Actor, view: ListView): Invoice[] {
-  return invoices.filter((invoice) => {
+export type InvoiceListResult =
+  | { ok: true; invoices: readonly Invoice[] }
+  | { ok: false; reason: "access_denied" };
+
+export function invoicesForView(actor: Actor, view: ListView): InvoiceListResult {
+  if (!authorizeListView(actor, view)) {
+    return { ok: false, reason: "access_denied" };
+  }
+  const invoices = invoiceRecords().filter((invoice) => {
     if (invoice.tenantId !== actor.tenantId) {
       return false;
     }
@@ -19,6 +26,24 @@ export function invoicesForView(actor: Actor, view: ListView): Invoice[] {
     }
     return true;
   });
+  return { ok: true, invoices };
+}
+
+export function policiesForActor(actor: Actor): readonly PolicyMetadata[] {
+  const seen = new Set<string>();
+  const policies: PolicyMetadata[] = [];
+  for (const invoice of invoiceRecords()) {
+    if (!canReadInvoice(actor, invoice)) {
+      continue;
+    }
+    const policy = findPolicy(invoice.policyId);
+    if (!policy || policy.tenantId !== actor.tenantId || seen.has(policy.policyId)) {
+      continue;
+    }
+    seen.add(policy.policyId);
+    policies.push(policy);
+  }
+  return policies;
 }
 
 export function readInvoiceForActor(
@@ -39,6 +64,16 @@ export function readInvoiceForActor(
     throw new Error(`Invoice ${invoice.invoiceId} is missing seed relations`);
   }
   return { ok: true, detail: { invoice, vendor, policy, assignee } };
+}
+
+export function sameTenantInvoiceNumberCount(invoice: Invoice): number {
+  return invoiceRecords().filter(
+    (item) => item.tenantId === invoice.tenantId && item.invoiceNumber === invoice.invoiceNumber,
+  ).length;
+}
+
+export function vendorLegalName(vendorId: string): string | undefined {
+  return findVendor(vendorId)?.legalName;
 }
 
 export function publicInvoice(invoice: Invoice) {

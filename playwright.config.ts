@@ -20,6 +20,7 @@ export default defineConfig({
     env: {
       EARS_DEMO_SESSION_SECRET: sessionSecret,
       EARS_ALLOW_DEMO_FAULTS: "1",
+      XAI_API_KEY: "",
     },
   },
   projects: [

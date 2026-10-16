@@ -21,8 +21,9 @@ export async function GET(request: Request) {
   if (!isListView(viewParam)) {
     return json({ error: "invalid_view" }, 400);
   }
-  if (!authorizeListView(actor, viewParam)) {
+  const listed = invoicesForView(actor, viewParam);
+  if (!authorizeListView(actor, viewParam) || !listed.ok) {
     return json({ error: "access_denied" }, 403);
   }
-  return json({ invoices: invoicesForView(actor, viewParam).map(publicInvoice) }, 200);
+  return json({ invoices: listed.invoices.map(publicInvoice) }, 200);
 }

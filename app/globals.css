@@ -145,6 +145,27 @@ button:focus-visible {
 
 .notice { color: var(--danger); }
 
+.review-panel { margin-top: 1rem; }
+
+.review-panel h2,
+.review-panel h3,
+.review-panel h4 {
+  font-family: "Iowan Old Style", Palatino, Georgia, serif;
+  margin: 0.8rem 0 0.35rem;
+}
+
+.review-panel button {
+  font: inherit;
+  background: var(--accent);
+  color: var(--banner-ink);
+  border: 0;
+  padding: 0.55rem 0.8rem;
+}
+
+.review-panel li { margin: 0.35rem 0; }
+
+.review-panel li span { display: block; }
+
 .sr-only {
   position: absolute;
   width: 1px;

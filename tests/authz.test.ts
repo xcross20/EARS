@@ -11,7 +11,7 @@ import {
 import { shouldDelayDemoLoad, shouldShowDemoFault } from "../lib/faults";
 import { formatUsd } from "../lib/format";
 import { invoicesForView, readInvoiceForActor } from "../lib/invoices";
-import { findEmployee, findInvoice, invoices, SEEDED_INVOICE_AMOUNT_CENTS } from "../lib/seed";
+import { findEmployee, findInvoice, SEEDED_INVOICE_AMOUNT_CENTS, tenants } from "../lib/seed";
 
 function actor(employeeId: string) {
   const employee = findEmployee(employeeId);
@@ -36,13 +36,18 @@ describe("invoice authorization", () => {
     const invoice = findInvoice("inv_harbor_50000");
     expect(invoice?.amountCents).toBe(SEEDED_INVOICE_AMOUNT_CENTS);
     expect(formatUsd(SEEDED_INVOICE_AMOUNT_CENTS)).toBe("$50,000.00");
-    expect(new Set(invoices.map((item) => item.tenantId)).size).toBe(2);
+    expect(tenants).toHaveLength(2);
   });
 
   it("shows Avery only the assigned invoice and hides the other tenant", () => {
     const avery = actor("emp_avery_chen");
-    const visible = invoicesForView(avery, "assigned").map((invoice) => invoice.invoiceId);
-    expect(visible).toEqual(["inv_harbor_50000"]);
+    const visible = invoicesForView(avery, "assigned");
+    expect(visible.ok).toBe(true);
+    if (visible.ok) {
+      expect(visible.invoices.map((invoice) => invoice.invoiceId)).toEqual(["inv_harbor_50000"]);
+    }
+    expect(invoicesForView(avery, "oversight")).toEqual({ ok: false, reason: "access_denied" });
+    expect(invoicesForView(avery, "evidence")).toEqual({ ok: false, reason: "access_denied" });
     expect(readInvoiceForActor(avery, "inv_harbor_50000").ok).toBe(true);
     expect(readInvoiceForActor(avery, "inv_harbor_1800")).toEqual({ ok: false, reason: "access_denied" });
     expect(readInvoiceForActor(avery, "inv_summit_9600")).toEqual({ ok: false, reason: "access_denied" });
@@ -57,12 +62,17 @@ describe("invoice authorization", () => {
     expect(authorizeListView(manager, "evidence")).toBe(false);
     expect(authorizeListView(auditor, "evidence")).toBe(true);
     expect(authorizeListView(auditor, "oversight")).toBe(false);
-    expect(invoicesForView(manager, "oversight").map((invoice) => invoice.invoiceId)).toEqual([
-      "inv_harbor_50000",
-      "inv_harbor_1800",
-    ]);
+    const oversight = invoicesForView(manager, "oversight");
+    expect(oversight.ok).toBe(true);
+    if (oversight.ok) {
+      const ids = oversight.invoices.map((invoice) => invoice.invoiceId);
+      expect(ids).toContain("inv_harbor_50000");
+      expect(ids).toContain("inv_harbor_1800");
+      expect(ids).not.toContain("inv_summit_9600");
+    }
+    expect(invoicesForView(manager, "assigned")).toEqual({ ok: false, reason: "access_denied" });
     expect(canReadInvoice(auditor, findInvoice("inv_summit_9600")!)).toBe(false);
-    expect(invoicesForView(actor("emp_riley_quinn"), "assigned")).toEqual([]);
+    expect(invoicesForView(actor("emp_riley_quinn"), "assigned")).toEqual({ ok: true, invoices: [] });
   });
 
   it("forbids approval and payment for every role", () => {

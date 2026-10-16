@@ -22,7 +22,15 @@ test("analyst opens the seeded invoice from the browser", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "$50,000.00" })).toBeVisible();
   await expect(page.getByText("Cedar Office Supply LLC")).toBeVisible();
   await expect(page.getByText("Synthetic Procurement Policy")).toBeVisible();
-  await expect(page.getByText("Submission and approval are not part of this slice.")).toBeVisible();
+  await expect(page.getByText("It is not an approval and it cannot submit a payment.")).toBeVisible();
+  await page.getByRole("button", { name: "Run AI review" }).click();
+  await expect(page.getByRole("heading", { name: "Refer to a manager. This is not an approval." })).toBeVisible();
+  const review = page.locator(".review-panel");
+  await expect(review.getByText("Synthetic Procurement Policy 2026.1")).toBeVisible();
+  await expect(review.getByText("Mock ERP vendor record")).toBeVisible();
+  await expect(review.getByText("Cedar Office Supply LLC is active.", { exact: true })).toHaveCount(2);
+  await expect(page.getByText("Deterministic evidence review. No external model was called.")).toBeVisible();
+  await expect(page.locator(".review-panel").getByText("Summit Synthetic Purchasing Note")).toHaveCount(0);
 });
 
 test("manager and auditor see distinct views", async ({ page }) => {
@@ -103,6 +111,15 @@ test("server denies spoofed headers, cross-tenant reads, approval, and payment",
   const pay = await page.request.post("/api/payments");
   expect(pay.status()).toBe(403);
   expect(await pay.json()).toEqual({ error: "operation_forbidden", operation: "pay" });
+
+  const leakedReview = await page.request.post("/api/invoices/inv_harbor_50000/review", {
+    headers: { "x-role": "manager", "x-tenant-id": "tenant_harbor" },
+  });
+  expect(leakedReview.status()).toBe(403);
+  const leakedBody = await leakedReview.text();
+  expect(leakedBody).not.toContain("Synthetic Procurement Policy");
+  expect(leakedBody).not.toContain("5000000");
+  expect(leakedBody).not.toContain("Cedar");
 
   await page.context().addCookies([
     {

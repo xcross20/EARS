@@ -25,6 +25,7 @@ export type Vendor = {
   legalName: string;
   status: "active";
   site: string;
+  erpAvailability: "available" | "unavailable";
 };
 
 export type PolicyMetadata = {

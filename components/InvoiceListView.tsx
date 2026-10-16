@@ -54,9 +54,12 @@ function InvoiceListBody({
   actor: NonNullable<Awaited<ReturnType<typeof currentActor>>>;
   view: ListView;
 }) {
-  const visible = invoicesForView(actor, view);
-  if (visible.length === 0) {
+  const listed = invoicesForView(actor, view);
+  if (!listed.ok) {
+    return <DeniedState actor={actor} />;
+  }
+  if (listed.invoices.length === 0) {
     return <EmptyState />;
   }
-  return <InvoiceTable invoices={visible} />;
+  return <InvoiceTable invoices={listed.invoices} />;
 }

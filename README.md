@@ -31,7 +31,7 @@ npm ci
 npm run dev
 ```
 
-Open `http://127.0.0.1:3000`. Choose **Avery Chen**. The assigned invoice is `INV-HBR-2026-0042` for **$50,000.00**.
+Open `http://127.0.0.1:3000`. Choose **Avery Chen**. The assigned invoice is `INV-HBR-2026-0042` for **$50,000.00**. On that invoice, **Run AI review** returns a cited recommendation. Without `XAI_API_KEY`, the draft is deterministic and no external model is called. The review is not an approval.
 
 Stop the dev server with Ctrl-C. A production-mode local process is:
 
