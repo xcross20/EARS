@@ -19,3 +19,19 @@
 
 ## Controller decision schema
 Record: work_order, branch, builder_commit, reviewer_identity, checks_with_commands_and_exit_codes, defects, decision (CONTINUE/ACCEPT/BLOCKED/RETHINK), rationale, next_work_order.
+
+## EARS-002 — Controller decision (2026-10-16)
+- **Decision:** ACCEPT for EARS-002 engineering scope only; no merge, deployment, or EARS-003 execution authorized.
+- **Implementation:** `feat/ears-002`, implementation `52564da8983ab1711e93ef385ede897d205163e7`, reviewed/evidence SHA `d716b97848cc78c671dda40c729fe1f41cdab4be`.
+- **Builder evidence:** `research/autonomous/EARS-002-builder-report.md` on implementation branch.
+- **Independent reviewer:** separate Grok session, detached worktree `/tmp/ears-002-r01`, report `research/autonomous/EARS-002-independent-review.md` on `review/ears-002-r01` at `ded4aeb3b313cc10e568fd6d076686e27fc9e907`. Verdict `NO_MATERIAL_DEFECTS`, recommendation `ACCEPT`.
+- **Verified checks:** `npm ci` 0; `npm run typecheck` 0; `npm test` 0 (16); `npx playwright install chromium` 0; `npm run test:e2e` 0 (5); `npm run build` 0; `npm audit --audit-level=critical` 1. CI for reviewed SHA succeeded (runs 38934403446 and 38934403607). CI does not run npm audit.
+- **Security evidence:** 40 hostile HTTP checks passed; unauthorized reads and model context leakage not observed; injected invoice instructions do not grant authorization; unauthorized/fabricated citation ids abstain; ERP outage abstains; approve/pay remain 403 and `isAuthorization` false. In-process probe had one failed assertion for a missing-vendor exception, recorded as P2, not concealed.
+- **Unverified:** live xAI call was not made; provider latency and actual model behavior are unverified. The default deterministic fallback is verified.
+- **Risk disposition:** unchanged PostCSS and Tinypool/@vitest/mocker advisories `ACCEPT_WITH_DOCUMENTED_RISK` for this synthetic demo; audit remains failing, must be revisited before deployment.
+- **Carry-forward P2:** validate invoice foreign-key tenant integrity at the data boundary; xAI fetch timeout; missing-vendor failure must abstain rather than throw.
+- **Carry-forward P3:** robust non-array citation input handling; distinguish failed-model fallback from no-key deterministic execution; mark provider adapter server-only; restrict raw seed access; maintain regression tests.
+- **EARS-003 hard gate:** implement server-side revocable sessions before approval writes; enforce tenant integrity and robust failure behavior before enabling any mutation. Retain explicit human approval and no payment execution.
+- **Rationale:** bounded evidence-grounded review meets EARS-002 acceptance criteria with independently verified trust boundaries. Deferred defects do not create a demonstrated current bypass, but are prerequisites for later authority.
+- **Next:** EARS-003 queued, not started. Human owner controls merge and deployment.
+
