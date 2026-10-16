@@ -1,13 +1,12 @@
 # State
 - Repository: xcross20/EARS
-- Current phase: first vertical slice independently verified; EARS-001 engineering acceptance recorded in `DECISION.md` on `control/ears-001-accept`.
-- Last accepted work order: EARS-001 (synthetic read-only invoice browser journey).
-- Accepted implementation SHA: `00eba687ce015d001dec0d3f3aa4d2b2874d6db2`.
-- Independent evidence: `verify/ears-001-r02` at `63ea635dbe43f0734a7c2f46e49aa6fa0cd081ff`.
-- Next work order: EARS-002, queued; not started.
-- Outstanding security constraints: actor-scoped data access before retrieval/model context; documented dependency audit risk; session revocation before approvals.
-- Autonomous VentureOS controller integration: not verified. This ledger update does not establish an executable autonomous controller.
-- Merges: not authorized by engineering acceptance; human owner retains approval.
-- Production deployment: none.
-
-Update only from observed evidence and recorded commits.
+- Current phase: EARS-002 independently verified and engineering ACCEPT recorded on `control/ears-002-accept`.
+- Last accepted work order: EARS-002 — evidence-grounded synthetic invoice review.
+- Accepted implementation SHA: `d716b97848cc78c671dda40c729fe1f41cdab4be`.
+- Independent evidence: `review/ears-002-r01` at `ded4aeb3b313cc10e568fd6d076686e27fc9e907`.
+- Prior accepted milestone: EARS-001.
+- Next work order: EARS-003, queued; not started.
+- Security prerequisites before approval writes: revocable sessions, tenant-integrity checks for invoice foreign keys, safe missing-vendor behavior, malformed model output handling, appropriate xAI timeout.
+- Live xAI not verified. Audit remains failing with documented risk; do not represent it as green.
+- Autonomous VentureOS controller integration: not verified. This ledger update is a manual Controller decision, not evidence of a running autonomous controller.
+- Merges and deployment: not authorized or performed. Human owner retains authority.
