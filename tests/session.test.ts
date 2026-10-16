@@ -5,6 +5,7 @@ import {
   employeeIdFromLoginBody,
   issueSessionToken,
   readSessionToken,
+  reloadSessionsFromDiskForTests,
   resetSessionRegistry,
   revokePresentedSession,
   sessionSecret,
@@ -41,6 +42,8 @@ describe("demo session", () => {
     const token = issueSessionToken("emp_avery_chen", NOW, SECRET)!;
     expect(readSessionToken(token, NOW + 1000, SECRET)?.employeeId).toBe("emp_avery_chen");
     revokePresentedSession(token, NOW + 1000, SECRET);
+    expect(readSessionToken(token, NOW + 1000, SECRET)).toBeNull();
+    reloadSessionsFromDiskForTests();
     expect(readSessionToken(token, NOW + 1000, SECRET)).toBeNull();
     expect(
       actorFromRequestParts({ sessionToken: token, headerRole: "manager", headerTenant: "tenant_harbor" }, NOW + 1000, SECRET),

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { toActor } from "../lib/authz";
-import { resetCasesForTests, retargetSubmitterForTests } from "../lib/cases";
+import { reloadCasesFromDiskForTests, resetCasesForTests, retargetSubmitterForTests } from "../lib/cases";
 import { findEmployee } from "../lib/seed";
 import { decideInvoice, listAuditForActor, submitAssignedInvoice } from "../lib/workflow";
 
@@ -103,6 +103,13 @@ describe("J001 approval workflow", () => {
       expect(reread.events[1]?.rationale).toBe("Threshold exception reviewed. No payment.");
     }
     expect(listAuditForActor(avery)).toMatchObject({ ok: false, httpStatus: 403 });
+    reloadCasesFromDiskForTests();
+    const reloaded = listAuditForActor(quinn);
+    expect(reloaded.ok).toBe(true);
+    if (reloaded.ok) {
+      expect(reloaded.events.map((event) => event.action)).toEqual(["submit", "approve"]);
+      expect(reloaded.events[1]?.rationale).toBe("Threshold exception reviewed. No payment.");
+    }
   });
 
   it("blocks ungrounded, cross-tenant, role, self, and duplicate decisions", async () => {
