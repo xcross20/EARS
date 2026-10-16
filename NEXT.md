@@ -1,24 +1,28 @@
 # Next work order
-**ID:** EARS-002
-**Status:** QUEUED — ELIGIBLE FOR BUILDER AFTER OPERATOR KICKOFF (not started)
-**Prerequisite:** EARS-001 engineering ACCEPT recorded in `DECISION.md` on `control/ears-001-accept`.
-**Base:** accepted EARS-001 implementation `00eba687ce015d001dec0d3f3aa4d2b2874d6db2`, plus approved controller bookkeeping. Do not assume branches or PRs are merged.
-**Full specification:** `work_orders/EARS-002.md`.
+**ID:** EARS-003
+**Status:** QUEUED — NOT STARTED; HUMAN OPERATOR KICKOFF REQUIRED
+**Prerequisite:** EARS-002 engineering ACCEPT recorded on `control/ears-002-accept`.
+**Base:** accepted EARS-002 SHA `d716b97848cc78c671dda40c729fe1f41cdab4be` plus Controller bookkeeping; do not assume PRs merged.
+**Full specification:** `work_orders/EARS-003.md`.
 
 ## Objective
-Deliver an authorized, evidence-grounded synthetic invoice review using procurement policies and a mock ERP, with deterministic checks, traceable citations and explicit abstention when evidence is missing.
+Complete J001 with analyst submission, manager approval/rejection, role separation, immutable-ish chronological audit events, and an Auditor evidence viewer. All data synthetic. No payment execution.
 
-## Mandatory first slice
-1. Fix the R01-01 authorization footgun: `invoicesForView` must enforce the actor's allowed view at the data-access boundary; add direct helper and HTTP regression tests.
-2. Address R01-02: introduce actor-scoped data access for policies, vendors and ERP results. Raw seed exports must not be available as a shortcut to model or tool context.
-3. Verify that cross-tenant documents never enter retrieval results or model context, including negative and injection tests.
-4. Retain all EARS-001 authz and E2E tests. No real financial operations.
+## Mandatory security preflight — BEFORE enabling approval writes
+1. Implement server-side session revocation so logged-out or invalidated tokens cannot approve; test replay of copied cookie.
+2. Validate invoice foreign-key relationships and tenant consistency at the data boundary before rendering or review/model packet construction; never leak cross-tenant vendor/policy metadata.
+3. Make missing vendor and malformed citation inputs fail closed without unhandled exceptions; add regression tests.
+4. Add bounded timeout and explicit server-only boundary to xAI adapter; distinguish no-key deterministic mode from provider-failure fallback in UI and API.
+5. Maintain explicit risk ledger for failed `npm audit` and avoid unreviewed forced major upgrades.
 
-## Boundaries
-- Human operator initiates EARS-002; no auto-execution, merge or deployment.
-- EARS-002 may not claim a passing npm security audit. Track documented advisories and reassess any changed dependencies.
-- No production SSO, live ERP, payment execution or external data.
-- Independent Reviewer and Controller acceptance required before EARS-003.
+## Workflow requirements
+- Analyst may submit only assigned invoice after evidence-grounded review, subject to deterministic policy rules.
+- Manager may approve/reject with rationale only within authorized tenant and without self-approval.
+- Auditor may view immutable-ish chronological audit records but cannot mutate.
+- Enforce state transitions, idempotency and concurrency checks server-side.
+- Every decision links authorized evidence and records actor, action, timestamp, outcome and rationale.
+- Negative tests: cross-tenant, role escalation, replay, injection, double-submit, unauthorized approval, stale state, and audit tampering.
+- No real payment, live ERP, production SSO, deployment or merge.
 
-## Evidence
-Commit SHA, exact commands/exit codes, test outputs, authorization and citation evaluations, independent reviewer report and Controller decision.
+## Stop conditions
+Do not begin EARS-003 automatically. Builder stops for independent review and Controller decision before any subsequent work order.
